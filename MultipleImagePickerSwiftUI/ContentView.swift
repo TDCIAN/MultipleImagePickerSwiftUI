@@ -24,13 +24,15 @@ struct Home: View {
     
     @State var selected: [UIImage] = []
     @State var data: [Images] = []
+    @State var show: Bool = false
     var body: some View {
         ZStack {
             Color.black.opacity(0.07).edgesIgnoringSafeArea(.all)
             
             VStack {
                 Button(action: {
-                    
+                    self.selected.removeAll()
+                    self.show.toggle()
                 }, label: {
                     Text("Image Picker")
                         .foregroundColor(.white)
@@ -41,7 +43,9 @@ struct Home: View {
                 .clipShape(Capsule())
             }
             
-            CustomPicker(selected: self.$selected, data: self.$data)
+            if self.show {
+                CustomPicker(selected: self.$selected, data: self.$data, show: self.$show)
+            }
         }
     }
 }
@@ -49,14 +53,34 @@ struct Home: View {
 struct CustomPicker: View {
     @Binding var selected: [UIImage]
     @Binding var data: [Images]
+    @State var grid: [Int] = []
+    @Binding var show: Bool
     
     var body: some View {
         GeometryReader { _ in
             VStack {
                 Spacer()
+                
+                HStack {
+                    Spacer()
+                    
+                    VStack {
+                        Spacer()
+                    }
+                    .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height / 1.5)
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    
+                    Spacer()
+                }
+                
+                Spacer()
             }
         }
         .background(Color.black.opacity(0.1).edgesIgnoringSafeArea(.all))
+        .onTapGesture {
+            self.show.toggle()
+        }
         .onAppear {
             PHPhotoLibrary.requestAuthorization { status in
                 if status == .authorized {
@@ -82,6 +106,16 @@ struct CustomPicker: View {
                     self.data.append(data1)
                 }
             }
+            
+            if req.count == self.data.count {
+                self.getGrid()
+            }
+        }
+    }
+    
+    func getGrid() {
+        for i in stride(from: 0, to: self.data.count, by: 3) {
+            self.grid.append(i)
         }
     }
 }
