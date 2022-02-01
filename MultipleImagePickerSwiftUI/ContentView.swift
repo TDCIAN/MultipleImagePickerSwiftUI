@@ -23,13 +23,27 @@ struct ContentView_Previews: PreviewProvider {
 struct Home: View {
     
     @State var selected: [UIImage] = []
-    @State var data: [Images] = []
     @State var show: Bool = false
     var body: some View {
         ZStack {
             Color.black.opacity(0.07).edgesIgnoringSafeArea(.all)
             
             VStack {
+                if !self.selected.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 20) {
+                            ForEach(self.selected, id: \.self) { i in
+                                Image(uiImage: i)
+                                    .resizable()
+                                    .frame(width: UIScreen.main.bounds.width - 40, height: 250)
+                                    .cornerRadius(15)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                }
+
+                
                 Button(action: {
                     self.selected.removeAll()
                     self.show.toggle()
@@ -41,10 +55,11 @@ struct Home: View {
                 })
                 .background(Color.red)
                 .clipShape(Capsule())
+                .padding(.top, 25)
             }
             
             if self.show {
-                CustomPicker(selected: self.$selected, data: self.$data, show: self.$show)
+                CustomPicker(selected: self.$selected, show: self.$show)
             }
         }
     }
@@ -52,9 +67,10 @@ struct Home: View {
 
 struct CustomPicker: View {
     @Binding var selected: [UIImage]
-    @Binding var data: [Images]
+    @State var data: [Images] = []
     @State var grid: [Int] = []
     @Binding var show: Bool
+    @State var disabled = false
     
     var body: some View {
         GeometryReader { _ in
@@ -82,16 +98,42 @@ struct CustomPicker: View {
                                             ForEach(i..<i+3, id: \.self) { j in
                                                 HStack {
                                                     if j < self.data.count {
-                                                        Card(data: self.data[j])
+                                                        Card(data: self.data[j], selected: self.$selected)
                                                     }
                                                 }
                                             }
+                                            
+//                                            if self.data.count % 3 != 0 && i == self.grid.last! {
+//
+//                                                Spacer()
+//                                            }
+
                                         }
+                                        .padding(.leading, (self.data.count % 3 != 0 && i == self.grid.last!) ? 15 : 0)
                                     }
                                 }
                             }
+                            
+                            Button(action: {
+                                self.show.toggle()
+                            }, label: {
+                                Text("Select")
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                                    .frame(width: UIScreen.main.bounds.width / 2)
+                            })
+                                .background(Color.red.opacity((self.selected.count != 0) ? 1 : 0.5))
+                            .clipShape(Capsule())
+                            .padding(.bottom, 25)
+                            .disabled((self.selected.count != 0) ? false : true)
+                            
                         } else {
-                            Indicator()
+                            if self.disabled {
+                                Text("Enable Storage Access In Settings!!!")
+                            } else {
+                                Indicator()
+                            }
+                            
                         }
                     }
                     .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height / 1.5)
@@ -112,8 +154,10 @@ struct CustomPicker: View {
             PHPhotoLibrary.requestAuthorization { status in
                 if status == .authorized {
                     self.getAllImages()
+                    self.disabled = false
                 } else {
                     print("Not authorized")
+                    self.disabled = true
                 }
             }
         }
@@ -153,12 +197,40 @@ struct Images {
 }
 
 struct Card: View {
-    var data: Images
+    @State var data: Images
+    @Binding var selected: [UIImage]
     
     var body: some View {
-        Image(uiImage: self.data.image)
-            .resizable()
-            .frame(width: (UIScreen.main.bounds.width - 80) / 3, height: 90)
+        ZStack {
+            Image(uiImage: self.data.image)
+                .resizable()
+            
+            if self.data.selected {
+                ZStack {
+                    Color.black.opacity(0.5)
+                    
+                    Image(systemName: "checkmark")
+                        .resizable()
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        .frame(width: (UIScreen.main.bounds.width - 80) / 3, height: 90)
+        .onTapGesture {
+            if !self.data.selected {
+                self.data.selected = true
+                self.selected.append(self.data.image)
+            } else {
+                for i in 0..<self.selected.count {
+                    if self.selected[i] == self.data.image {
+                        self.selected.remove(at: i)
+                        self.data.selected = false
+                        return
+                    }
+                }
+            }
+        }
     }
 }
 
