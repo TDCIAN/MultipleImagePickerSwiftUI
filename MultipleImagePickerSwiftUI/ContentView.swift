@@ -36,7 +36,7 @@ struct Home: View {
                 }, label: {
                     Text("Image Picker")
                         .foregroundColor(.white)
-                        .padding(.vertical)
+                        .padding(.vertical, 10)
                         .frame(width: UIScreen.main.bounds.width / 2)
                 })
                 .background(Color.red)
@@ -65,7 +65,34 @@ struct CustomPicker: View {
                     Spacer()
                     
                     VStack {
-                        Spacer()
+                        if !self.grid.isEmpty {
+                            HStack {
+                                Text("Pick a Image")
+                                    .fontWeight(.bold)
+                                
+                                Spacer()
+                            }
+                            .padding(.leading)
+                            .padding(.top)
+                            
+                            ScrollView(.vertical, showsIndicators: false) {
+                                VStack(spacing: 20) {
+                                    ForEach(self.grid, id: \.self) { i in
+                                        HStack(spacing: 8) {
+                                            ForEach(i..<i+3, id: \.self) { j in
+                                                HStack {
+                                                    if j < self.data.count {
+                                                        Card(data: self.data[j])
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Indicator()
+                        }
                     }
                     .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height / 1.5)
                     .background(Color.white)
@@ -123,4 +150,26 @@ struct CustomPicker: View {
 struct Images {
     var image: UIImage
     var selected: Bool
+}
+
+struct Card: View {
+    var data: Images
+    
+    var body: some View {
+        Image(uiImage: self.data.image)
+            .resizable()
+            .frame(width: (UIScreen.main.bounds.width - 80) / 3, height: 90)
+    }
+}
+
+struct Indicator: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIActivityIndicatorView {
+        let view = UIActivityIndicatorView(style: .large)
+        view.startAnimating()
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIActivityIndicatorView, context: Context) {
+        
+    }
 }
