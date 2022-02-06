@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Photos
+import Photos // MARK: Do not forget to import Photos!
 
 struct ContentView: View {
     var body: some View {
@@ -20,6 +20,7 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
+// MARK: 'Home' shows main contents
 struct Home: View {
     
     @State var selected: [UIImage] = []
