@@ -14,12 +14,6 @@ struct ContentView: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
-
 // MARK: 'Home' shows main contents
 struct Home: View {
     
@@ -66,6 +60,7 @@ struct Home: View {
     }
 }
 
+// MARK: Show image list
 struct CustomPicker: View {
     @Binding var selected: [UIImage]
     @State var data: [Images] = []
@@ -104,10 +99,10 @@ struct CustomPicker: View {
                                                 }
                                             }
                                             
-//                                            if self.data.count % 3 != 0 && i == self.grid.last! {
-//
-//                                                Spacer()
-//                                            }
+                                            if self.data.count % 3 != 0 && i == self.grid.last! {
+
+                                                Spacer()
+                                            }
 
                                         }
                                         .padding(.leading, (self.data.count % 3 != 0 && i == self.grid.last!) ? 15 : 0)
@@ -123,7 +118,7 @@ struct CustomPicker: View {
                                     .padding(.vertical, 10)
                                     .frame(width: UIScreen.main.bounds.width / 2)
                             })
-                                .background(Color.red.opacity((self.selected.count != 0) ? 1 : 0.5))
+                            .background(Color.red.opacity((self.selected.count != 0) ? 1 : 0.5))
                             .clipShape(Capsule())
                             .padding(.bottom, 25)
                             .disabled((self.selected.count != 0) ? false : true)
@@ -152,6 +147,7 @@ struct CustomPicker: View {
             self.show.toggle()
         }
         .onAppear {
+            // MARK: Request authorization(You need to add 'Privacy - Photo Library Usage Description' into your info.plist)
             PHPhotoLibrary.requestAuthorization { status in
                 if status == .authorized {
                     self.getAllImages()
@@ -164,18 +160,20 @@ struct CustomPicker: View {
         }
     }
     
+    // MARK: Get all images from your photo app
     func getAllImages() {
         let req = PHAsset.fetchAssets(with: .image, options: .none)
         
         DispatchQueue.global(qos: .background).async {
             req.enumerateObjects { phAsset, int, objcBool in
+                
                 let options = PHImageRequestOptions()
                 options.isSynchronous = true
                 
                 PHCachingImageManager.default().requestImage(for: phAsset, targetSize: .init(), contentMode: .default, options: options) { image, dictionary in
                     print("CustomPicker - getAllImages() - \(image?.pngData())")
-                    let data1 = Images(image: image!, selected: false)
-                    self.data.append(data1)
+                    let imageData = Images(image: image!, selected: false)
+                    self.data.append(imageData)
                 }
             }
             
@@ -192,11 +190,13 @@ struct CustomPicker: View {
     }
 }
 
+// MARK: Defines image model type
 struct Images {
     var image: UIImage
     var selected: Bool
 }
 
+// MARK: Shows each image status(selected or not)
 struct Card: View {
     @State var data: Images
     @Binding var selected: [UIImage]
@@ -235,6 +235,7 @@ struct Card: View {
     }
 }
 
+// MARK: Show indicator until loading is complete
 struct Indicator: UIViewRepresentable {
     func makeUIView(context: Context) -> UIActivityIndicatorView {
         let view = UIActivityIndicatorView(style: .large)
